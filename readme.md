@@ -1,5 +1,15 @@
-# IDLIX Video Downloader & Player  
+# IDLIX Video Downloader & Player
+
 CLI + GUI Version (Tkinter + FFplay)
+
+> **Fork notice**  
+> Repository ini adalah **fork** dari proyek original:
+>
+> - Original: [sandrocods/IdlixDownloader](https://github.com/sandrocods/IdlixDownloader.git)
+> - Fork ini: [ibnu-sodik/IdlixDownloader](https://github.com/ibnu-sodik/IdlixDownloader.git)
+>
+> Semua credit kepemilikan dan pengembangan awal tetap milik **sandrocods**.  
+> Fork ini dibuat untuk keperluan personal/modifikasi lokal.
 
 IDLIX CLI Video Downloader & Video Player adalah program berbasis command-line interface (CLI) yang dirancang untuk mengunduh dan memutar video dari platform IDLIX dengan efisien. program ini memungkinkan pengguna untuk
 berinteraksi langsung dengan platform IDLIX, sehingga mereka dapat mengunduh video sesuai dengan preferensi link atau featured movie. Setelah diunduh video dapat diputar dengan lancar menggunakan bantuan FFmpeg / FFplay
@@ -12,26 +22,26 @@ berinteraksi langsung dengan platform IDLIX, sehingga mereka dapat mengunduh vid
 
 Program mendukung Windows dan Linux.
 
-------------------------------------------------------------
+---
 
 # Fitur Utama
 
-| Nama                    | Deskripsi                                                          | Status |
-|-------------------------|--------------------------------------------------------------------|--------|
-| Featured Movie List     | Menampilkan daftar film unggulan                                   | ✔      |
-| Poster Grid GUI         | Menampilkan poster film dalam grid                                 | ✔      |
-| Play Featured Movie     | Memutar film dari featured                                         | ✔      |
-| Download Featured Movie | Mengunduh film dari featured                                       | ✔      |
-| Play Movie by URL       | Memutar film berdasarkan URL                                       | ✔      |
-| Download Movie by URL   | Mengunduh film berdasarkan URL                                     | ✔      |
-| Select Resolution       | Memilih resolusi (variant playlist)                                | ✔      |
-| Subtitle Support        | Download dan load subtitle otomatis                                | ✔      |
-| FFplay Integration      | Pemutaran video stabil                                              | ✔      |
-| Stop Player Feature     | Menghentikan ffplay                                                 | ✔      |
-| Download Folder Button  | Membuka folder hasil download                                       | ✔      |
-| Log Console GUI         | Log real-time seperti terminal                                      | ✔      |
+| Nama                    | Deskripsi                           | Status |
+| ----------------------- | ----------------------------------- | ------ |
+| Featured Movie List     | Menampilkan daftar film unggulan    | ✔      |
+| Poster Grid GUI         | Menampilkan poster film dalam grid  | ✔      |
+| Play Featured Movie     | Memutar film dari featured          | ✔      |
+| Download Featured Movie | Mengunduh film dari featured        | ✔      |
+| Play Movie by URL       | Memutar film berdasarkan URL        | ✔      |
+| Download Movie by URL   | Mengunduh film berdasarkan URL      | ✔      |
+| Select Resolution       | Memilih resolusi (variant playlist) | ✔      |
+| Subtitle Support        | Download dan load subtitle otomatis | ✔      |
+| FFplay Integration      | Pemutaran video stabil              | ✔      |
+| Stop Player Feature     | Menghentikan ffplay                 | ✔      |
+| Download Folder Button  | Membuka folder hasil download       | ✔      |
+| Log Console GUI         | Log real-time seperti terminal      | ✔      |
 
-------------------------------------------------------------
+---
 
 # Package Utama
 
@@ -44,31 +54,51 @@ Program mendukung Windows dan Linux.
 - tkinter
 - FFmpeg / FFplay
 
-------------------------------------------------------------
+---
 
 # 🔽 Download (Rekomendasi)
 
 Untuk pengguna Windows **tidak perlu Python**.  
-Cukup download file `.exe` di halaman Release:
+Cukup download file `.exe` di halaman Release (repo original):
 
 👉 https://github.com/sandrocods/IdlixDownloader/releases/latest
 
-# # 🔧 Instalasi dari Source (Opsional)
+# 🔧 Instalasi dari Source (Opsional)
 
-1. Clone repository:
-git clone https://github.com/sandrocods/IdlixDownloader
+1. Clone repository (fork):
+
+```bash
+git clone https://github.com/ibnu-sodik/IdlixDownloader.git
 cd IdlixDownloader
+```
 
-2. Install requirements:
+2. Buat virtual environment & install requirements:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Linux / macOS
+# .venv\Scripts\activate    # Windows
+
 pip install -r requirements.txt
+```
 
 3. Jalankan GUI:
+
+```bash
 python main_gui.py
+# atau: .venv/bin/python main_gui.py
+```
 
 4. Jalankan CLI:
-python main.py
 
-------------------------------------------------------------
+```bash
+python main.py
+# atau: .venv/bin/python main.py
+```
+
+> **Catatan:** Original source tetap di [sandrocods/IdlixDownloader](https://github.com/sandrocods/IdlixDownloader.git).
+
+---
 
 # Cara Penggunaan (GUI)
 
@@ -83,16 +113,16 @@ python main.py
 4. Subtitle otomatis didownload dan dikonversi.
 5. Player menggunakan ffplay.
 
-------------------------------------------------------------
+---
 
 # Screenshots (GUI Version)
+
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/gui1.jpg?raw=true)
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/gui2.jpg?raw=true)
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/gui3.jpg?raw=true)
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/gui4.jpg?raw=true)
 
-------------------------------------------------------------
-
+---
 
 # Fitur CLI
 
@@ -106,18 +136,18 @@ Menu CLI:
 
 Dengan retry logic dan output tabel PrettyTable.
 
-
-------------------------------------------------------------
+---
 
 # Screenshots (CLI Version)
+
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/1.jpg?raw=true)
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/2.jpg?raw=true)
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/3.jpg?raw=true)
 ![](https://github.com/sandrocods/IdlixDownloader/blob/master/ss/4.jpg?raw=true)
 
-------------------------------------------------------------
+---
 
-------------------------------------------------------------
+---
 
 # Auto Install FFmpeg (Windows Only)
 
@@ -127,7 +157,7 @@ Program akan otomatis:
 2. Mengekstrak ke folder src/ffmpeg
 3. Menambahkan PATH secara otomatis
 
-------------------------------------------------------------
+---
 
 # Roadmap
 
@@ -138,13 +168,14 @@ Program akan otomatis:
 - Download progress bar
 - Fullscreen GUI player mode
 
-------------------------------------------------------------
+---
 
 # Changelog
 
-2025-11-28 — BIG UPDATE
------------------------
+## 2025-11-28 — BIG UPDATE
+
 Added:
+
 - GUI lengkap Tkinter
 - Poster grid scrollable
 - Play & Download by URL
@@ -158,68 +189,72 @@ Added:
 - Subtitle & m3u8 handling lebih robust
 
 Updated:
+
 - Struktur process movie
 - UI lebih intuitif
 - Logger lebih clean
 
-------------------------------------------------------------
+---
 
-2024-11-27
-----------
+## 2024-11-27
+
 Updated API untuk server baru
 
-------------------------------------------------------------
+---
 
-2024-08-21
-----------
+## 2024-08-21
+
 Added:
+
 - README.md
 - requirements.txt
 - Screenshots
 
 Updated:
+
 - Subtitle & resolusi
 - Helper Linux
 - Optimasi project
 
-------------------------------------------------------------
+---
 
-2023-03-28
-----------
+## 2023-03-28
+
 General improvements
 
-------------------------------------------------------------
+---
 
-2022-09-09
-----------
+## 2022-09-09
+
 Added worker threads  
 Updated logging  
 Cleaned code  
 Removed redundant logs
 
-------------------------------------------------------------
+---
 
-2022-09-08
-----------
+## 2022-09-08
+
 Fixed API update issues
 
-------------------------------------------------------------
+---
 
-2022-08-17
-----------
+## 2022-08-17
+
 Added ffmpeg integration  
 Fixed exe issues  
-Added tutorial images  
+Added tutorial images
 
-------------------------------------------------------------
+---
 
-2022-08-12 — Initial Commit
----------------------------
+## 2022-08-12 — Initial Commit
 
-------------------------------------------------------------
+---
 
 # Disclaimer
 
 Program ini dibuat untuk pembelajaran.  
 Segala penyalahgunaan di luar tanggung jawab pembuat.
 
+Original project © [sandrocods](https://github.com/sandrocods) —  
+Fork: [ibnu-sodik/IdlixDownloader](https://github.com/ibnu-sodik/IdlixDownloader.git)

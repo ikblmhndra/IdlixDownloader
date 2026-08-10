@@ -1,0 +1,30 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache / build
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Installer / packaging
+*.manifest
+*.spec
+
+# Logs & local runtime
+*.log
+downloads/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
