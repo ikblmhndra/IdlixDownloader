@@ -74,26 +74,36 @@ cd IdlixDownloader
 
 2. Buat virtual environment & install requirements:
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate   # Linux / macOS
-# .venv\Scripts\activate    # Windows
+Sistem operasi modern (seperti Ubuntu 24.04+, Pop!_OS 24.04+, Debian 12+) membatasi instalasi package secara global (`externally-managed-environment` / PEP 668). **Wajib** menggunakan virtual environment:
 
+```bash
+# Membuat virtual environment
+python3 -m venv .venv
+
+# Mengaktifkan virtual environment (Wajib dilakukan setiap membuka terminal baru)
+source .venv/bin/activate   # Linux / macOS
+# atau untuk Windows:
+# .venv\Scripts\activate
+
+# Install dependensi yang sudah dibersihkan
 pip install -r requirements.txt
 ```
 
 3. Jalankan GUI:
 
+Pastikan virtual environment telah aktif (`(.venv)` muncul di terminal):
 ```bash
 python main_gui.py
-# atau: .venv/bin/python main_gui.py
+# Atau jalankan langsung tanpa aktivasi shell:
+# .venv/bin/python main_gui.py
 ```
 
 4. Jalankan CLI:
 
 ```bash
 python main.py
-# atau: .venv/bin/python main.py
+# Atau jalankan langsung tanpa aktivasi shell:
+# .venv/bin/python main.py
 ```
 
 > **Catatan:** Original source tetap di [sandrocods/IdlixDownloader](https://github.com/sandrocods/IdlixDownloader.git).

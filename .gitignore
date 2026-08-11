@@ -21,6 +21,23 @@ build/
 *.log
 downloads/
 
+# Scratch / debug artifacts
+inline_script_*.js
+rsc_*.txt
+tmp_*.py
+sub_*.json
+sub_*.txt
+
+# Media output (downloaded videos & subtitles)
+*.mp4
+*.mkv
+*.ts
+*.vtt
+*.srt
+
+# Markdown
+PRD.md
+
 # OS / editor
 .DS_Store
 Thumbs.db
