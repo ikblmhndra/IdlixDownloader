@@ -126,24 +126,26 @@ class IdlixGUI:
         row = col = 0
 
         for movie in self.featured_movies:
-            try:
-                img_raw = requests.get(movie["poster"], timeout=8).content
-                img = Image.open(BytesIO(img_raw)).resize(size)
-                tk_img = ImageTk.PhotoImage(img)
-            except:
-                continue
-
-            self.poster_images.append(tk_img)
-
             frame = ttk.Frame(self.poster_frame)
             frame.grid(row=row, column=col, padx=10, pady=10)
 
-            tk.Button(
-                frame,
-                image=tk_img,
-                relief="flat",
-                command=lambda m=movie: self.on_poster_click(m)
-            ).pack()
+            tk_img = self._load_poster_image(movie, size)
+
+            if tk_img:
+                tk.Button(
+                    frame,
+                    image=tk_img,
+                    relief="flat",
+                    command=lambda m=movie: self.on_poster_click(m)
+                ).pack()
+            else:
+                tk.Button(
+                    frame,
+                    text="No Poster\nClick for options",
+                    width=15,
+                    height=10,
+                    command=lambda m=movie: self.on_poster_click(m)
+                ).pack()
 
             ttk.Label(
                 frame,
@@ -212,6 +214,23 @@ class IdlixGUI:
         return result["res"]
 
     # ============================================================
+    # POSTER LOADING (background thread, non-blocking UI)
+    # ============================================================
+    def _load_poster_image(self, movie, size):
+        """Build tk image from pre-downloaded poster bytes. Runs on main thread."""
+        poster_bytes = movie.get("_poster_bytes")
+        if not poster_bytes:
+            return None
+        try:
+            img = Image.open(BytesIO(poster_bytes)).resize(size)
+            tk_img = ImageTk.PhotoImage(img)
+            self.poster_images.append(tk_img)
+            return tk_img
+        except Exception as exc:
+            logger.warning(f"Failed to build poster: {exc}")
+            return None
+
+    # ============================================================
     # REFRESH FEATURED LIST
     # ============================================================
     def refresh_featured(self):
@@ -224,7 +243,34 @@ class IdlixGUI:
                 return
 
             self.featured_movies = home["featured_movie"]
+            # Render text buttons first (immediate load)
             self.root.after(0, self.show_poster_grid)
+
+            # Lazy load poster images in background
+            for m in self.featured_movies:
+                m["_poster_bytes"] = None
+                try:
+                    # Parse slug and type from URL
+                    slug = m["url"].strip("/").split("/")[-1]
+                    item_type = m["type"]
+                    # Normalize type name to plural for api endpoint (movies / series)
+                    type_plural = f"{item_type}s" if not item_type.endswith("s") else item_type
+                    
+                    api_url = f"{self.idlix.base_url.rstrip('/')}/api/{type_plural}/{slug}"
+                    resp = self.idlix.request.get(api_url, timeout=5)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        poster_path = data.get("posterPath")
+                        if poster_path:
+                            # Use low-res tmdb poster for faster UI load (w185)
+                            poster_url = f"https://image.tmdb.org/t/p/w185{poster_path}"
+                            img_resp = requests.get(poster_url, timeout=5)
+                            if img_resp.status_code == 200:
+                                m["_poster_bytes"] = img_resp.content
+                                # Trigger partial refresh on main thread
+                                self.root.after(0, self.show_poster_grid)
+                except Exception as exc:
+                    logger.debug(f"Poster lazy load failed for {m['title']}: {exc}")
 
             logger.success("Featured loaded.")
 

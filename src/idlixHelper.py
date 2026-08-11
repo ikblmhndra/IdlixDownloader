@@ -265,6 +265,8 @@ class IdlixHelper:
                     )
                     img = link.find("img")
                     poster = img["src"] if img else None
+                    if poster and poster.startswith("//"):
+                        poster = "https:" + poster
                     tmp_featured.append(
                         {
                             "url": self.base_url.strip("/") + url,
@@ -300,7 +302,9 @@ class IdlixHelper:
                         img = link_el.find("img")
                         if img and "src" in img.attrs:
                             poster_path = img["src"]
-                            if poster_path.startswith("/"):
+                            if poster_path.startswith("//"):
+                                poster = "https:" + poster_path
+                            elif poster_path.startswith("/"):
                                 poster = self.base_url.strip("/") + poster_path
                             else:
                                 poster = poster_path
