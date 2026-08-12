@@ -26,15 +26,11 @@ from typing import Any
 import requests
 from loguru import logger
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from vtt_to_srt.vtt_to_srt import ConvertFile
 from curl_cffi import requests as cffi_requests
 
 from src import config
-
-# CDN base untuk media playlist (dari hasil reverse-engineering)
-_CDN_BASE = "https://e2e.majorplay.net"
-
 
 class IdlixHelper:
     # ------------------------------------------------------------------
@@ -71,6 +67,7 @@ class IdlixHelper:
         self.embed_url: str | None = None       # master M3U8 URL (kompatibilitas)
         self.video_name: str | None = None
         self.video_slug: str | None = None
+        self.content_type: str = "movie"   # "movie" | "episode"
         self.is_subtitle: bool | None = None
         self.variant_playlist = None
 
@@ -360,8 +357,26 @@ class IdlixHelper:
         slug = path_parts[1]
         self.video_slug = slug
 
+        # Deteksi URL episode: /series/{slug}/season/{s}/episode/{e}
+        is_episode = False
+        season = episode = None
+        if content_type == "series" and len(path_parts) >= 6:
+            try:
+                season = int(path_parts[3])
+                episode = int(path_parts[5])
+                is_episode = True
+            except (IndexError, ValueError):
+                pass
+
         # Hit API
-        api_url = f"{self.base_url.rstrip('/')}/api/movies/{slug}"
+        base = self.base_url.rstrip("/")
+        if is_episode:
+            api_url = f"{base}/api/series/{slug}/season/{season}/episode/{episode}"
+            self.content_type = "episode"
+        else:
+            api_url = f"{base}/api/movies/{slug}"
+            self.content_type = "movie"
+
         try:
             resp = self.request.get(
                 url=api_url,
@@ -370,15 +385,28 @@ class IdlixHelper:
             if resp.status_code != 200:
                 return {
                     "status": False,
-                    "message": f"API /api/movies/{slug} returned {resp.status_code}",
+                    "message": f"API {api_url.replace(base, '')} returned {resp.status_code}",
                 }
 
             data = resp.json()
-            self.video_uuid = data.get("id")        # UUID
+            if is_episode:
+                episode_data = data.get("episode", {})
+                self.video_uuid = episode_data.get("id")
+                series_title = data.get("series", {}).get("title", slug.replace("-", " ").title())
+                ep_title = episode_data.get("title") or ""
+                self.video_name = (
+                    f"{series_title} S{season}E{episode}"
+                    + (f" - {ep_title}" if ep_title else "")
+                )
+            else:
+                self.video_uuid = data.get("id")
+                self.video_name = data.get("title", slug.replace("-", " ").title())
+
             self.video_id = self.video_uuid          # backward compat
-            self.video_name = data.get("title", slug.replace("-", " ").title())
 
             poster_path = data.get("posterPath")
+            if not poster_path and is_episode:
+                poster_path = data.get("series", {}).get("posterPath")
             if poster_path:
                 self.poster = f"https://image.tmdb.org/t/p/w500{poster_path}"
             else:
@@ -420,7 +448,7 @@ class IdlixHelper:
 
         try:
             # Step 1: play-info
-            play_info_url = f"{base}/api/watch/play-info/movie/{self.video_uuid}"
+            play_info_url = f"{base}/api/watch/play-info/{self.content_type}/{self.video_uuid}"
             resp = self.request.get(
                 url=play_info_url,
                 headers={"Accept": "application/json"},
@@ -527,13 +555,7 @@ class IdlixHelper:
             # Parse audio URI dari EXT-X-MEDIA
             audio_match = re.search(r'TYPE=AUDIO[^"]*URI="([^"]+)"', master_text)
             if audio_match:
-                audio_path = audio_match.group(1)
-                if audio_path.startswith("/"):
-                    self._audio_playlist_url = _CDN_BASE + audio_path
-                elif audio_path.startswith("http"):
-                    self._audio_playlist_url = audio_path
-                else:
-                    self._audio_playlist_url = audio_path
+                self._audio_playlist_url = urljoin(self._master_m3u8_url, audio_match.group(1))
                 if self._audio_playlist_url:
                     logger.info(f"Audio track found: {self._audio_playlist_url[:80]}...")
 
@@ -559,13 +581,8 @@ class IdlixHelper:
                             break
 
                     if uri_line:
-                        # Build full URL
-                        if uri_line.startswith("/"):
-                            full_uri = _CDN_BASE + uri_line
-                        elif uri_line.startswith("http"):
-                            full_uri = uri_line
-                        else:
-                            full_uri = uri_line
+                        # Resolve relative URI against master playlist URL
+                        full_uri = urljoin(self._master_m3u8_url, uri_line)
 
                         tmp_variant_playlist.append(
                             {
