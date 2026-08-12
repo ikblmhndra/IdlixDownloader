@@ -630,7 +630,7 @@ class IdlixHelper:
     # ------------------------------------------------------------------
     # Download M3U8  (NEW: ffmpeg-based, mux video+audio)
     # ------------------------------------------------------------------
-    def download_m3u8(self) -> dict[str, Any]:
+    def download_m3u8(self, output_dir: str | None = None) -> dict[str, Any]:
         """
         Download video+audio menggunakan ffmpeg.
         Karena HLS baru memisahkan video & audio track, kita perlu
@@ -644,7 +644,8 @@ class IdlixHelper:
 
             # Sanitize filename
             safe_name = re.sub(r'[<>:"/\\|?*]', "", self.video_name).strip()
-            output_path = os.path.join(os.getcwd(), f"{safe_name}.mp4")
+            out_dir = output_dir or os.getcwd()
+            output_path = os.path.join(out_dir, f"{safe_name}.mp4")
 
             # Build ffmpeg command
             cmd = ["ffmpeg", "-y"]

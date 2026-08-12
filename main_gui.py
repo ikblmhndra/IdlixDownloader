@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox, simpledialog, filedialog
 import threading
 import subprocess
 import os
@@ -359,7 +359,20 @@ class IdlixGUI:
 
             # DOWNLOAD
             else:
-                result = idlix.download_m3u8()
+                folder = {}
+
+                def ask():
+                    folder["dir"] = filedialog.askdirectory(
+                        title="Pilih Lokasi Download"
+                    )
+
+                self.root.after(0, ask)
+                while folder.get("dir") is None:
+                    self.root.update()
+
+                out_dir = folder["dir"] or os.getcwd()
+
+                result = idlix.download_m3u8(out_dir)
                 if result.get("status"):
                     logger.success(f"Downloaded: {result['path']}")
                 else:

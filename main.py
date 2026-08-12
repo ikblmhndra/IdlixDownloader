@@ -3,6 +3,8 @@ from prettytable import PrettyTable
 import inquirer
 import threading
 import time
+import os
+from tkinter import filedialog
 
 RETRY_LIMIT = 3
 
@@ -94,7 +96,11 @@ def process_movie(idlix_helper, url: str, mode: str):
 
     # 6. If download
     else:
-        result = idlix_helper.download_m3u8()
+        output_dir = filedialog.askdirectory(
+            title="Pilih Lokasi Download"
+        ) or os.getcwd()
+
+        result = idlix_helper.download_m3u8(output_dir)
         if result.get("status"):
             logger.success(f"Downloading {video_data['video_name']} success")
         else:
