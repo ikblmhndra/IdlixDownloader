@@ -374,7 +374,24 @@ class IdlixGUI:
 
                 result = idlix.download_m3u8(out_dir)
                 if result.get("status"):
-                    logger.success(f"Downloaded: {result['path']}")
+                    logger.success(f"Downloaded: {result.get('path', video_data['video_name'])}")
+                    
+                    def ask_split():
+                        folder["split"] = messagebox.askyesno(
+                            "Split Video",
+                            "Bagi video untuk TikTok/Shorts (10 menit per part)?"
+                        )
+
+                    folder["split"] = None
+                    self.root.after(0, ask_split)
+                    while folder.get("split") is None:
+                        self.root.update()
+
+                    if folder["split"]:
+                        import re
+                        safe_name = re.sub(r'[<>:"/\\|?*]', "", video_data['video_name']).strip()
+                        output_file = os.path.join(out_dir, f"{safe_name}.mp4")
+                        idlix.split_video(output_file, segment_time=600)
                 else:
                     logger.error("Download failed.")
 

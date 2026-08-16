@@ -103,6 +103,23 @@ def process_movie(idlix_helper, url: str, mode: str):
         result = idlix_helper.download_m3u8(output_dir)
         if result.get("status"):
             logger.success(f"Downloading {video_data['video_name']} success")
+            
+            # --- FR-10: Optional Auto-split ---
+            split_q = [
+                inquirer.List(
+                    "split",
+                    message="Bagi video untuk TikTok/Shorts (10 menit per part)?",
+                    choices=["Tidak", "Ya"],
+                    carousel=True
+                )
+            ]
+            ans_split = inquirer.prompt(split_q)
+            if ans_split and ans_split["split"] == "Ya":
+                import re
+                safe_name = re.sub(r'[<>:"/\\|?*]', "", video_data['video_name']).strip()
+                output_file = os.path.join(output_dir, f"{safe_name}.mp4")
+                idlix_helper.split_video(output_file, segment_time=600)
+                
         else:
             logger.error("Error downloading m3u8")
 

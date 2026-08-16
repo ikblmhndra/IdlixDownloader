@@ -700,6 +700,54 @@ class IdlixHelper:
     def get_subtitle(self, download: bool = True) -> dict[str, Any]:
         """
         Download subtitle dari track list yang didapat via API.
+    # ------------------------------------------------------------------
+    # Split Video  (FR-10: TikTok/Shorts Ready via FFmpeg Segment Muxer)
+    # ------------------------------------------------------------------
+    def split_video(self, input_file: str, segment_time: int = 600) -> dict[str, Any]:
+        # Memotong video utuh menjadi beberapa part menggunakan ffmpeg.
+        # Metode stream copy (tanpa re-encode) sehingga instan.
+        try:
+            self._ensure_ffmpeg()
+            if not os.path.exists(input_file):
+                return {"status": False, "message": f"Input file not found: {input_file}"}
+
+            dir_name = os.path.dirname(input_file)
+            base_name = os.path.splitext(os.path.basename(input_file))[0]
+            
+            # Format output: folder_asli/NamaFilm_part_001.mp4
+            output_pattern = os.path.join(dir_name, f"{base_name}_part_%03d.mp4")
+
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-i", input_file,
+                "-c", "copy",
+                "-map", "0",
+                "-segment_time", str(segment_time),
+                "-f", "segment",
+                "-reset_timestamps", "1",
+                output_pattern
+            ]
+
+            logger.info(f"Splitting video '{base_name}' into {segment_time}s parts...")
+            logger.debug(f"ffmpeg command: {' '.join(cmd)}")
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+
+            if result.returncode == 0:
+                logger.success(f"Video successfully split: {base_name}_part_XXX.mp4")
+                return {"status": True, "message": "Video split successfully"}
+            else:
+                logger.error(f"FFMPEG Error: {result.stderr}")
+                return {
+                    "status": False,
+                    "message": f"ffmpeg exited with code {result.returncode}",
+                    "error": result.stderr,
+                }
+        except Exception as e:
+            return {"status": False, "message": str(e)}
+
+
         Default: pilih "Indonesian". Jika tidak ada, ambil yang pertama.
         """
         self.is_subtitle = False
