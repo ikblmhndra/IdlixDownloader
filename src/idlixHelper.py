@@ -832,6 +832,7 @@ class IdlixHelper:
                 "-c", "copy",
                 "-map", "0",
                 "-segment_time", str(segment_time),
+                "-segment_start_number", "1",
                 "-f", "segment",
                 "-reset_timestamps", "1",
                 output_pattern
