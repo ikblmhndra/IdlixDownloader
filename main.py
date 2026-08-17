@@ -166,6 +166,7 @@ def main():
                     "Play Featured Movie",
                     "Download Movie by URL",
                     "Play Movie by URL",
+                    "Partisi Video (Lokal)",
                     "Exit"
                 ],
                 carousel=True
@@ -173,6 +174,16 @@ def main():
         ]
         answer = inquirer.prompt(question)
         action = answer["action"]
+        
+        if action == "Partisi Video (Lokal)":
+            file_path = filedialog.askopenfilename(
+                title="Pilih Video untuk di-Partisi",
+                filetypes=[("MP4 Files", "*.mp4"), ("All Files", "*.*")]
+            )
+            if file_path:
+                idlix.split_video(file_path, segment_time=600)
+            continue
+            
         if action in ["Download Featured Movie", "Play Featured Movie"]:
             # Select movie
             movie_question = [
