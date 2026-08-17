@@ -656,6 +656,12 @@ class IdlixHelper:
             # Input 2: audio (jika ada)
             if self._audio_playlist_url:
                 cmd.extend(["-i", self._audio_playlist_url])
+                
+            # Input 3: subtitle (jika ada)
+            subtitle_path = self.video_name.replace(" ", "_") + ".srt"
+            has_sub = self.is_subtitle and os.path.exists(subtitle_path)
+            if has_sub:
+                cmd.extend(["-i", subtitle_path])
 
             # Mapping & codec
             if self._audio_playlist_url:
@@ -663,11 +669,20 @@ class IdlixHelper:
                     "-map", "0:v:0",     # video dari input 0
                     "-map", "1:a:0",     # audio dari input 1
                 ])
+                if has_sub:
+                    cmd.extend(["-map", "2:s:0"])
             else:
                 cmd.extend(["-map", "0"])
+                if has_sub:
+                    cmd.extend(["-map", "1:s:0"])
 
             cmd.extend([
                 "-c", "copy",            # no re-encoding
+            ])
+            if has_sub:
+                cmd.extend(["-c:s", "mov_text"]) # format text MP4
+                
+            cmd.extend([
                 "-movflags", "+faststart",
                 "-loglevel", "info",
                 "-stats",

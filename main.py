@@ -96,6 +96,13 @@ def process_movie(idlix_helper, url: str, mode: str):
 
     # 6. If download
     else:
+        # --- FIX: Download Subtitle juga sebelum download video ---
+        subtitle = idlix_helper.get_subtitle()
+        if subtitle.get("status"):
+            logger.success("Subtitle downloaded for video")
+        else:
+            logger.warning("Subtitle unavailable for video")
+            
         output_dir = filedialog.askdirectory(
             title="Pilih Lokasi Download"
         ) or os.getcwd()
