@@ -1,6 +1,7 @@
 from src.idlixHelper import IdlixHelper, logger
 from prettytable import PrettyTable
 import inquirer
+import re
 import threading
 import time
 import os
@@ -29,8 +30,6 @@ def play_m3u8_thread(idlix_helper):
 def process_movie(idlix_helper, url: str, mode: str):
     # --- FIX: Prompt untuk URL Series tanpa Episode ---
     if "/series/" in url and "/episode/" not in url:
-        import inquirer
-        import re
         logger.info("URL TV Series terdeteksi. Silakan pilih Season dan Episode.")
         q_series = [
             inquirer.Text('season', message="Masukkan nomor Season", default="1"),
@@ -113,16 +112,16 @@ def process_movie(idlix_helper, url: str, mode: str):
 
     # 6. If download
     else:
-        # --- FIX: Download Subtitle juga sebelum download video ---
-        subtitle = idlix_helper.get_subtitle()
+        output_dir = filedialog.askdirectory(
+            title="Pilih Lokasi Download"
+        ) or os.getcwd()
+
+        # --- FIX: Download Subtitle langsung ke output_dir ---
+        subtitle = idlix_helper.get_subtitle(output_dir)
         if subtitle.get("status"):
             logger.success("Subtitle downloaded for video")
         else:
             logger.warning("Subtitle unavailable for video")
-            
-        output_dir = filedialog.askdirectory(
-            title="Pilih Lokasi Download"
-        ) or os.getcwd()
 
         result = idlix_helper.download_m3u8(output_dir)
         if result.get("status"):
@@ -139,7 +138,6 @@ def process_movie(idlix_helper, url: str, mode: str):
             ]
             ans_split = inquirer.prompt(split_q)
             if ans_split and ans_split["split"] == "Ya":
-                import re
                 safe_name = re.sub(r'[<>:"/\\|?*]', "", video_data['video_name']).strip()
                 output_file = os.path.join(output_dir, f"{safe_name}.mp4")
                 idlix_helper.split_video(output_file, segment_time=600)

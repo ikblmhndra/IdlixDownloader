@@ -685,20 +685,6 @@ class IdlixHelper:
                     "message": f"ffmpeg exited with code {result.returncode}",
                 }
 
-            # --- FIX: Move subtitle file directly next to the MP4 file ---
-            safe_name = re.sub(r'[<>:"/\\|?*]', "", self.video_name).strip()
-            subtitle_path_cwd = os.path.join(os.getcwd(), f"{safe_name}.srt")
-            if self.is_subtitle and os.path.exists(subtitle_path_cwd):
-                try:
-                    import shutil
-                    dest_subtitle = os.path.join(out_dir, f"{safe_name}.srt")
-                    if os.path.abspath(subtitle_path_cwd) != os.path.abspath(dest_subtitle):
-                        shutil.move(subtitle_path_cwd, dest_subtitle)
-                    logger.success(f"Subtitle saved next to video: {dest_subtitle}")
-                except Exception as e:
-                    logger.warning(f"Failed to move subtitle file: {e}")
-            # ---------------------------------------------------------------
-
             return {
                 "status": True,
                 "message": "Download success",
@@ -711,7 +697,7 @@ class IdlixHelper:
     # ------------------------------------------------------------------
     # Subtitle
     # ------------------------------------------------------------------
-    def get_subtitle(self, download: bool = True) -> dict[str, Any]:
+    def get_subtitle(self, output_dir: str | None = None) -> dict[str, Any]:
         """
         Download subtitle dari track list yang didapat via API.
         Default: pilih "Indonesian". Jika tidak ada, ambil yang pertama.
@@ -739,8 +725,9 @@ class IdlixHelper:
         try:
             # Sanitize filename
             safe_name = re.sub(r'[<>:"/\\|?*]', "", self.video_name).strip()
-            vtt_path = os.path.join(os.getcwd(), f"{safe_name}.vtt")
-            srt_path = os.path.join(os.getcwd(), f"{safe_name}.srt")
+            target_dir = output_dir or os.getcwd()
+            vtt_path = os.path.join(target_dir, f"{safe_name}.vtt")
+            srt_path = os.path.join(target_dir, f"{safe_name}.srt")
 
             # Download VTT
             resp = self.request.get(sub_url)
