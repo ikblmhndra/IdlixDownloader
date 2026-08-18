@@ -686,7 +686,8 @@ class IdlixHelper:
                 }
 
             # --- FIX: Move subtitle file directly next to the MP4 file ---
-            subtitle_path_cwd = self.video_name.replace(" ", "_") + ".srt"
+            safe_name = re.sub(r'[<>:"/\\|?*]', "", self.video_name).strip()
+            subtitle_path_cwd = os.path.join(os.getcwd(), f"{safe_name}.srt")
             if self.is_subtitle and os.path.exists(subtitle_path_cwd):
                 try:
                     import shutil
@@ -825,7 +826,9 @@ class IdlixHelper:
     def split_video(self, input_file: str, segment_time: int = 600) -> dict[str, Any]:
         """
         Memotong video utuh menjadi beberapa part menggunakan ffmpeg.
-        Metode stream copy (tanpa re-encode) sehingga instan.
+        Metode default stream copy (tanpa re-encode) sehingga instan.
+        Namun jika ada file `.srt` bernama sama, akan dilakukan HARDSUB
+        ke dalam part-part video (membutuhkan re-encode).
         """
         try:
             self._ensure_ffmpeg()
@@ -838,18 +841,37 @@ class IdlixHelper:
             # Format output: folder_asli/NamaFilm_part_001.mp4
             output_pattern = os.path.join(dir_name, f"{base_name}_part_%03d.mp4")
 
+            srt_file = os.path.join(dir_name, f"{base_name}.srt")
+            has_srt = os.path.exists(srt_file)
+
             cmd = [
                 "ffmpeg",
                 "-y",
                 "-i", input_file,
-                "-c", "copy",
+            ]
+
+            if has_srt:
+                logger.info("Subtitles found! Performing Hardsub (This will take longer due to re-encoding)...")
+                # Format path untuk filter subtitles ffmpeg (escape backslash and colon)
+                safe_srt = srt_file.replace("\\", "/").replace(":", "\\:")
+                cmd.extend([
+                    "-vf", f"subtitles='{safe_srt}'",
+                    "-c:v", "libx264",
+                    "-preset", "fast",
+                    "-c:a", "copy"
+                ])
+            else:
+                logger.info("No subtitles found. Performing fast stream copy...")
+                cmd.extend(["-c", "copy"])
+
+            cmd.extend([
                 "-map", "0",
                 "-segment_time", str(segment_time),
                 "-segment_start_number", "1",
                 "-f", "segment",
                 "-reset_timestamps", "1",
                 output_pattern
-            ]
+            ])
 
             logger.info(f"Splitting video '{base_name}' into {segment_time}s parts...")
             logger.debug(f"ffmpeg command: {' '.join(cmd)}")
