@@ -27,6 +27,23 @@ def play_m3u8_thread(idlix_helper):
 
 
 def process_movie(idlix_helper, url: str, mode: str):
+    # --- FIX: Prompt untuk URL Series tanpa Episode ---
+    if "/series/" in url and "/episode/" not in url:
+        import inquirer
+        import re
+        logger.info("URL TV Series terdeteksi. Silakan pilih Season dan Episode.")
+        q_series = [
+            inquirer.Text('season', message="Masukkan nomor Season", default="1"),
+            inquirer.Text('episode', message="Masukkan nomor Episode", default="1")
+        ]
+        ans_series = inquirer.prompt(q_series)
+        if ans_series:
+            # pastikan url tidak berakhiran slash
+            url = url.rstrip("/")
+            url = f"{url}/season/{ans_series['season'].strip()}/episode/{ans_series['episode'].strip()}"
+            logger.info(f"Mengakses: {url}")
+    # ------------------------------------------------
+
     video_data = retry(idlix_helper.get_video_data, url)
     if not video_data.get("status"):
         logger.error("Error getting video data")
