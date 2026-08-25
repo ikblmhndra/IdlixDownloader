@@ -429,6 +429,113 @@ class IdlixHelper:
             return {"status": False, "message": str(e)}
 
     # ------------------------------------------------------------------
+    # Series metadata & season episodes (NEW: API-based)
+    # ------------------------------------------------------------------
+    def get_series_info(self, url_or_slug: str) -> dict[str, Any]:
+        """
+        Hit ``/api/series/{slug}`` untuk mendapatkan metadata series dan daftar season.
+        """
+        if not url_or_slug:
+            return {"status": False, "message": "URL or slug is required"}
+
+        slug = url_or_slug.strip()
+        if "http://" in slug or "https://" in slug:
+            parsed = urlparse(slug)
+            path_parts = [p for p in parsed.path.split("/") if p]
+            if len(path_parts) >= 2:
+                slug = path_parts[1]
+            elif len(path_parts) == 1:
+                slug = path_parts[0]
+
+        base = self.base_url.rstrip("/")
+        api_url = f"{base}/api/series/{slug}"
+
+        try:
+            resp = self.request.get(
+                url=api_url,
+                headers={"Accept": "application/json"},
+            )
+            if resp.status_code != 200:
+                return {
+                    "status": False,
+                    "message": f"API /api/series/{slug} returned {resp.status_code}",
+                }
+
+            data = resp.json()
+            title = data.get("title", slug.replace("-", " ").title())
+            seasons = data.get("seasons", [])
+
+            seasons_list = []
+            for s in seasons:
+                season_num = s.get("seasonNumber") or s.get("season_number")
+                if season_num is not None:
+                    seasons_list.append({
+                        "season_number": int(season_num),
+                        "name": s.get("name") or f"Season {season_num}",
+                        "episode_count": s.get("episodeCount") or s.get("episode_count") or 0
+                    })
+
+            seasons_list.sort(key=lambda x: x["season_number"])
+
+            return {
+                "status": True,
+                "title": title,
+                "slug": slug,
+                "seasons": seasons_list,
+                "raw_data": data,
+            }
+        except Exception as e:
+            return {"status": False, "message": str(e)}
+
+    def get_season_episodes(self, slug: str, season_number: int) -> dict[str, Any]:
+        """
+        Hit ``/api/series/{slug}/season/{season_number}`` untuk mendapatkan episode list.
+        """
+        if not slug or season_number is None:
+            return {"status": False, "message": "Slug and season number are required"}
+
+        base = self.base_url.rstrip("/")
+        api_url = f"{base}/api/series/{slug}/season/{season_number}"
+
+        try:
+            resp = self.request.get(
+                url=api_url,
+                headers={"Accept": "application/json"},
+            )
+            if resp.status_code != 200:
+                return {
+                    "status": False,
+                    "message": f"API /api/series/{slug}/season/{season_number} returned {resp.status_code}",
+                }
+
+            data = resp.json()
+            season_info = data.get("season", {})
+            episodes_raw = season_info.get("episodes", [])
+
+            episodes_list = []
+            for ep in episodes_raw:
+                ep_num = ep.get("episodeNumber")
+                ep_title = ep.get("name") or ep.get("title") or f"Episode {ep_num}"
+                episodes_list.append({
+                    "episode_number": ep_num,
+                    "title": ep_title,
+                    "id": ep.get("id"),
+                    "has_video": ep.get("hasVideo", True),
+                    "url": f"{base}/series/{slug}/season/{season_number}/episode/{ep_num}"
+                })
+
+            episodes_list.sort(key=lambda x: x["episode_number"] if x["episode_number"] is not None else 0)
+
+            return {
+                "status": True,
+                "slug": slug,
+                "season_number": season_number,
+                "episodes": episodes_list,
+            }
+        except Exception as e:
+            return {"status": False, "message": str(e)}
+
+    # ------------------------------------------------------------------
     # Embed URL  (NEW: play-info → wait → claim → redeem → master M3U8)
     # ------------------------------------------------------------------
     def get_embed_url(self) -> dict[str, Any]:
