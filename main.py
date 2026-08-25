@@ -5,9 +5,54 @@ import re
 import threading
 import time
 import os
-from tkinter import filedialog
 
 RETRY_LIMIT = 3
+
+
+def _has_display() -> bool:
+    """True when a GUI display is available (not headless server)."""
+    if os.name == "nt":
+        return True
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def ask_directory(title: str = "Pilih Lokasi Download") -> str:
+    """Pick a folder via GUI if available, otherwise prompt in terminal."""
+    if _has_display():
+        try:
+            from tkinter import filedialog
+            return filedialog.askdirectory(title=title) or os.getcwd()
+        except Exception:
+            pass
+    answer = inquirer.prompt([
+        inquirer.Text(
+            "path",
+            message=f"{title} (kosongkan = folder saat ini)",
+            default=os.getcwd(),
+        )
+    ])
+    path = (answer or {}).get("path") or os.getcwd()
+    return os.path.abspath(os.path.expanduser(path.strip()))
+
+
+def ask_open_filename(title: str = "Pilih File", filetypes=None) -> str | None:
+    """Pick a file via GUI if available, otherwise prompt in terminal."""
+    if _has_display():
+        try:
+            from tkinter import filedialog
+            kwargs = {"title": title}
+            if filetypes:
+                kwargs["filetypes"] = filetypes
+            return filedialog.askopenfilename(**kwargs) or None
+        except Exception:
+            pass
+    answer = inquirer.prompt([
+        inquirer.Text("path", message=f"{title} (path file)")
+    ])
+    path = ((answer or {}).get("path") or "").strip()
+    if not path:
+        return None
+    return os.path.abspath(os.path.expanduser(path))
 
 
 def retry(func, *args, **kwargs):
@@ -112,9 +157,7 @@ def process_movie(idlix_helper, url: str, mode: str):
 
     # 6. If download
     else:
-        output_dir = filedialog.askdirectory(
-            title="Pilih Lokasi Download"
-        ) or os.getcwd()
+        output_dir = ask_directory("Pilih Lokasi Download")
 
         # --- FIX: Download Subtitle langsung ke output_dir ---
         subtitle = idlix_helper.get_subtitle(output_dir)
@@ -198,9 +241,9 @@ def main():
         action = answer["action"]
         
         if action == "Partisi Video (Lokal)":
-            file_path = filedialog.askopenfilename(
+            file_path = ask_open_filename(
                 title="Pilih Video untuk di-Partisi",
-                filetypes=[("MP4 Files", "*.mp4"), ("All Files", "*.*")]
+                filetypes=[("MP4 Files", "*.mp4"), ("All Files", "*.*")],
             )
             if file_path:
                 idlix.split_video(file_path, segment_time=600)
